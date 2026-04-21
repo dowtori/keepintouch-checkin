@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>KEEPINTOUCH · 어드민</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #FAF7F2;
+      --ink: #2C1810;
+      --ink60: rgba(44,24,16,.6);
+      --ink40: rgba(44,24,16,.4);
+      --ink20: rgba(44,24,16,.2);
+      --ink10: rgba(44,24,16,.1);
+      --rose: #D4826A;
+      --rose-light: #FBE9E3;
+      --border: #E8DDD5;
+      --card: #FFFFFF;
+      --success: #6A9E7A;
+      --success-bg: #EEF5F1;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --radius-pill: 28px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    /* ── 비밀번호 게이트 ── */
+    #gate {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+    }
+    .gate-brand {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ink40);
+      margin-bottom: 32px;
+    }
+    .gate-input {
+      width: 100%;
+      max-width: 280px;
+      height: 52px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0 16px;
+      font-size: 16px;
+      font-family: inherit;
+      color: var(--ink);
+      outline: none;
+      text-align: center;
+      letter-spacing: 0.06em;
+      transition: border-color 0.15s;
+      -webkit-appearance: none;
+    }
+    .gate-input:focus { border-color: var(--rose); }
+    .gate-error {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--rose);
+      display: none;
+    }
+    .gate-hint {
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--ink40);
+    }
+
+    /* ── 메인 레이아웃 ── */
+    #app { display: none; }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 20px;
+    }
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .h-brand {
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink);
+    }
+    .h-sub { font-size: 11px; color: var(--ink40); margin-left: 6px; }
+    .btn-refresh {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      padding: 5px 14px;
+      font-size: 12px;
+      font-family: inherit;
+      color: var(--ink60);
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .btn-refresh:hover { border-color: var(--rose); color: var(--rose); }
+    .btn-refresh:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── 검색 ── */
+    .search-wrap {
+      position: relative;
+    }
+    .search-input {
+      width: 100%;
+      height: 40px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      padding: 0 16px 0 38px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.15s;
+      -webkit-appearance: none;
+    }
+    .search-input:focus { border-color: var(--rose); }
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+
+    /* ── 탭 ── */
+    .tabs {
+      display: flex;
+      gap: 6px;
+      padding: 12px 20px 0;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      flex-shrink: 0;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      padding: 5px 14px;
+      font-size: 12px;
+      font-family: inherit;
+      color: var(--ink60);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tab.active {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: #fff;
+    }
+
+    /* ── 통계 ── */
+    .stats {
+      display: flex;
+      gap: 8px;
+      padding: 12px 20px;
+    }
+    .stat-pill {
+      flex: 1;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      text-align: center;
+    }
+    .stat-num {
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--ink);
+      line-height: 1.2;
+    }
+    .stat-num.checked { color: var(--success); }
+    .stat-label {
+      font-size: 10px;
+      color: var(--ink40);
+      letter-spacing: 0.04em;
+      margin-top: 2px;
+    }
+
+    /* ── 게스트 목록 ── */
+    .list {
+      padding: 0 20px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+    .empty {
+      text-align: center;
+      padding: 60px 0;
+      color: var(--ink40);
+      font-size: 13px;
+    }
+
+    .guest-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      margin-bottom: 6px;
+    }
+    .guest-row.is-checked {
+      border-left: 3px solid var(--success);
+    }
+
+    .guest-info { flex: 1; min-width: 0; }
+    .guest-name {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--ink);
+      margin-bottom: 2px;
+    }
+    .guest-time {
+      font-size: 11px;
+      color: var(--ink40);
+    }
+    .guest-companion {
+      font-size: 11px;
+      color: var(--ink60);
+      margin-top: 3px;
+    }
+    .companion-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+    .companion-dot.checked { background: var(--success); }
+    .companion-dot.pending { background: var(--border); }
+
+    .status-pill {
+      flex-shrink: 0;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      letter-spacing: 0.04em;
+    }
+    .status-pill.done {
+      background: var(--success-bg);
+      color: var(--success);
+    }
+    .status-pill.pending {
+      background: var(--ink10);
+      color: var(--ink40);
+    }
+
+    /* ── 로딩 ── */
+    #loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px;
+    }
+    .spinner {
+      width: 24px; height: 24px;
+      border: 2px solid var(--border);
+      border-top-color: var(--rose);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <!-- 비밀번호 게이트 -->
+  <div id="gate">
+    <p class="gate-brand">KEEPINTOUCH · Admin</p>
+    <input class="gate-input" type="password" id="gate-input"
+           placeholder="비밀번호" autocomplete="off" enterkeyhint="done">
+    <p class="gate-error" id="gate-error">비밀번호가 올바르지 않습니다</p>
+    <p class="gate-hint">Enter 또는 확인을 눌러주세요</p>
+  </div>
+
+  <!-- 메인 앱 -->
+  <div id="app">
+    <header>
+      <div class="header-row">
+        <div>
+          <span class="h-brand">Keepintouch</span>
+          <span class="h-sub">어드민</span>
+        </div>
+        <button class="btn-refresh" id="btn-refresh">새로고침</button>
+      </div>
+      <div class="search-wrap">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="rgba(44,24,16,.4)" stroke-width="2" stroke-linecap="round">
+          <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input class="search-input" type="search" id="search-input" placeholder="이름 검색">
+      </div>
+    </header>
+
+    <div class="tabs" id="tabs"></div>
+    <div class="stats" id="stats"></div>
+
+    <div id="loading"><div class="spinner"></div></div>
+    <div class="list" id="list" style="display:none"></div>
+  </div>
+
+  <script src="./api.js"></script>
+  <script>
+    // ── 비밀번호 설정 ─────────────────────
+    const ADMIN_PASSWORD = 'kit2026';
+
+    // ── 게이트 ────────────────────────────
+    const gateInput = document.getElementById('gate-input');
+    const gateError = document.getElementById('gate-error');
+
+    gateInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') checkPassword();
+    });
+
+    function checkPassword() {
+      if (gateInput.value === ADMIN_PASSWORD) {
+        document.getElementById('gate').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        loadData();
+      } else {
+        gateError.style.display = 'block';
+        gateInput.value = '';
+        gateInput.focus();
+      }
+    }
+
+    // ── 상태 ─────────────────────────────
+    let allGuests  = [];
+    let activeTab  = '전체';
+    let searchQuery = '';
+
+    // ── 데이터 로드 ───────────────────────
+    async function loadData() {
+      const loading = document.getElementById('loading');
+      const list    = document.getElementById('list');
+      loading.style.display = 'flex';
+      list.style.display    = 'none';
+
+      try {
+        const res    = await API.list();
+        allGuests    = res.guests || [];
+        buildTabs();
+        render();
+      } catch (e) {
+        document.getElementById('list').innerHTML =
+          '<p class="empty">데이터를 불러오지 못했습니다.<br>새로고침을 눌러주세요.</p>';
+      } finally {
+        loading.style.display = 'none';
+        list.style.display    = 'flex';
+      }
+    }
+
+    document.getElementById('btn-refresh').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-refresh');
+      btn.disabled = true;
+      btn.textContent = '불러오는 중...';
+      await loadData();
+      btn.disabled = false;
+      btn.textContent = '새로고침';
+    });
+
+    document.getElementById('search-input').addEventListener('input', e => {
+      searchQuery = e.target.value.trim();
+      render();
+    });
+
+    // ── 탭 생성 ───────────────────────────
+    function buildTabs() {
+      // 체크인 날짜 기준으로 탭 생성
+      const dates = new Set();
+      allGuests.forEach(g => {
+        if (g.checked_in_at) {
+          const d = new Date(g.checked_in_at);
+          if (!isNaN(d)) {
+            dates.add(d.getMonth() + 1 + '/' + d.getDate());
+          }
+        }
+      });
+
+      const tabEl  = document.getElementById('tabs');
+      const tabList = ['전체', ...Array.from(dates).sort()];
+      tabEl.innerHTML = tabList.map(t =>
+        `<button class="tab ${t === activeTab ? 'active' : ''}" data-tab="${t}">${t}</button>`
+      ).join('');
+
+      tabEl.querySelectorAll('.tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          activeTab = btn.dataset.tab;
+          tabEl.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          render();
+        });
+      });
+    }
+
+    // ── 필터 ─────────────────────────────
+    function filterGuests() {
+      let list = allGuests;
+
+      if (activeTab !== '전체') {
+        list = list.filter(g => {
+          if (!g.checked_in_at) return false;
+          const d = new Date(g.checked_in_at);
+          return (d.getMonth() + 1 + '/' + d.getDate()) === activeTab;
+        });
+      }
+
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        list = list.filter(g => g.name.toLowerCase().includes(q));
+      }
+
+      return list;
+    }
+
+    // ── 렌더 ─────────────────────────────
+    function formatTime(raw) {
+      if (!raw) return '';
+      try {
+        const d = new Date(raw);
+        return d.toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      } catch { return ''; }
+    }
+
+    function render() {
+      const filtered = filterGuests();
+      const checkedIn = filtered.filter(g => g.is_checked_in).length;
+      const total     = filtered.length;
+      const notYet    = total - checkedIn;
+
+      // 통계
+      document.getElementById('stats').innerHTML = `
+        <div class="stat-pill">
+          <div class="stat-num">${total}</div>
+          <div class="stat-label">전체</div>
+        </div>
+        <div class="stat-pill">
+          <div class="stat-num checked">${checkedIn}</div>
+          <div class="stat-label">입장 완료</div>
+        </div>
+        <div class="stat-pill">
+          <div class="stat-num">${notYet}</div>
+          <div class="stat-label">미도착</div>
+        </div>
+      `;
+
+      // 목록 — 미도착 먼저, 같은 상태면 이름순
+      const sorted = [...filtered].sort((a, b) => {
+        if (a.is_checked_in !== b.is_checked_in) return a.is_checked_in ? 1 : -1;
+        return a.name.localeCompare(b.name, 'ko');
+      });
+
+      if (sorted.length === 0) {
+        document.getElementById('list').innerHTML = '<p class="empty">해당하는 게스트가 없습니다</p>';
+        return;
+      }
+
+      document.getElementById('list').innerHTML = sorted.map(g => {
+        const companionHtml = g.companion_name ? `
+          <p class="guest-companion">
+            <span class="companion-dot ${g.companion_is_checked_in ? 'checked' : 'pending'}"></span>
+            동행 ${g.companion_name}${g.companion_is_checked_in ? ' · 입장 완료' : ' · 미도착'}
+          </p>` : '';
+
+        return `
+          <div class="guest-row ${g.is_checked_in ? 'is-checked' : ''}">
+            <div class="guest-info">
+              <p class="guest-name">${g.name}</p>
+              ${g.is_checked_in
+                ? `<p class="guest-time">${formatTime(g.checked_in_at)}</p>`
+                : '<p class="guest-time">—</p>'}
+              ${companionHtml}
+            </div>
+            <span class="status-pill ${g.is_checked_in ? 'done' : 'pending'}">
+              ${g.is_checked_in ? '입장 완료' : '미도착'}
+            </span>
+          </div>`;
+      }).join('');
+    }
+  </script>
+</body>
+</html>

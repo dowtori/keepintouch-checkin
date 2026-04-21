@@ -223,23 +223,6 @@
       letter-spacing: 0.02em;
       margin-bottom: 10px;
     }
-    .confirm-status {
-      display: inline-block;
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: 0.06em;
-      padding: 3px 10px;
-      border-radius: var(--radius-pill);
-      margin-bottom: 16px;
-    }
-    .confirm-status.selected {
-      background: var(--rose-light);
-      color: var(--rose);
-    }
-    .confirm-status.reserve {
-      background: var(--ink10);
-      color: var(--ink60);
-    }
     .confirm-question {
       font-size: 15px;
       color: var(--ink60);
@@ -309,6 +292,35 @@
     .error-title { font-size: 17px; font-weight: 500; margin-bottom: 8px; text-align: center; }
     .error-desc { font-size: 13px; color: var(--ink40); text-align: center; line-height: 1.6; margin-bottom: 28px; }
 
+    /* ── 동행인 씬 ── */
+    .companion-card {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .companion-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink40);
+      margin-bottom: 10px;
+    }
+    .companion-name {
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--ink);
+      margin-bottom: 10px;
+    }
+    .companion-question {
+      font-size: 15px;
+      color: var(--ink60);
+    }
+
     /* ── 스태프 씬 ── */
     .staff-card {
       width: 100%;
@@ -372,7 +384,6 @@
         </div>
         <p class="confirm-name" id="confirm-name"></p>
         <p class="confirm-handle" id="confirm-handle"></p>
-        <span class="confirm-status" id="confirm-status"></span>
         <p class="confirm-question">맞으신가요?</p>
       </div>
       <button class="btn btn-rose" id="btn-yes">네, 맞습니다</button>
@@ -430,6 +441,17 @@
       <p class="error-title">연결에 문제가 생겼어요</p>
       <p class="error-desc">잠시 후 다시 시도해주세요.<br>계속되면 담당자에게 말씀해주세요.</p>
       <button class="btn btn-primary" id="btn-error-retry">다시 시도</button>
+    </div>
+
+    <!-- 씬 5c: 동행인 확인 -->
+    <div class="scene" id="scene-companion" style="text-align:center">
+      <div class="companion-card">
+        <p class="companion-label">동행인</p>
+        <p class="companion-name" id="companion-name-display"></p>
+        <p class="companion-question">함께 오셨나요?</p>
+      </div>
+      <button class="btn btn-rose" id="btn-companion-yes">함께 입장</button>
+      <button class="btn btn-secondary" id="btn-companion-no">본인만 입장</button>
     </div>
 
     <!-- 씬 6: 2회 미매칭 → 스태프 -->
@@ -546,9 +568,6 @@
             setConfirmAvatar(result.id);
             document.getElementById('confirm-name').textContent = result.name + '님';
             document.getElementById('confirm-handle').textContent = extractHandle(result.instagram);
-            const statusEl = document.getElementById('confirm-status');
-            statusEl.textContent = result.status === '예비' ? '예비' : '선정';
-            statusEl.className = 'confirm-status ' + (result.status === '예비' ? 'reserve' : 'selected');
             showScene('scene-confirm');
           }
         } else {
@@ -582,12 +601,13 @@
             formatTime(result.checked_in_at) + ' 입장 완료';
           showScene('scene-already');
         } else if (result.success) {
-          document.getElementById('success-name').textContent =
-            '환영합니다, ' + result.name + '님';
-          showScene('scene-success');
-          setTimeout(() => {
-            window.location.href = './guide.html';
-          }, 1500); // 애니메이션(1.5s)과 일치
+          // 동행인이 있으면 동행인 씬으로, 없으면 바로 성공
+          if (result.companion_name) {
+            document.getElementById('companion-name-display').textContent = result.companion_name + '님';
+            showScene('scene-companion');
+          } else {
+            showSuccessAndRedirect(result.name);
+          }
         }
       } catch {
         showScene('scene-error');
@@ -595,6 +615,30 @@
         btnYes.disabled = false;
         btnYes.textContent = '네, 맞습니다';
       }
+    });
+
+    // ── 성공 씬 공통 ─────────────────────
+    function showSuccessAndRedirect(name) {
+      document.getElementById('success-name').textContent = '환영합니다, ' + name + '님';
+      showScene('scene-success');
+      setTimeout(() => { window.location.href = './guide.html'; }, 1500);
+    }
+
+    // ── 동행인 씬 ─────────────────────────
+    document.getElementById('btn-companion-yes').addEventListener('click', async () => {
+      if (!pendingGuest) return;
+      const btn = document.getElementById('btn-companion-yes');
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner"></div>';
+      try {
+        await API.checkinCompanion(pendingGuest.row_id, getEventDay());
+      } catch (e) {}
+      showSuccessAndRedirect(pendingGuest.name);
+    });
+
+    document.getElementById('btn-companion-no').addEventListener('click', () => {
+      if (!pendingGuest) return;
+      showSuccessAndRedirect(pendingGuest.name);
     });
 
     // ── 다시 입력 ─────────────────────────
