@@ -54,37 +54,57 @@
       letter-spacing: 0.16em;
       text-transform: uppercase;
       color: var(--ink40);
-      margin-bottom: 32px;
+      margin-bottom: 40px;
     }
+
+    /* PIN 도트 표시 */
+    .pin-dots {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .pin-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: transparent;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .pin-dot.filled {
+      background: var(--ink);
+      border-color: var(--ink);
+    }
+    .pin-dot.error {
+      background: var(--rose);
+      border-color: var(--rose);
+    }
+
+    /* 숨겨진 실제 입력 */
     .gate-input {
-      width: 100%;
-      max-width: 280px;
-      height: 52px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 0 16px;
-      font-size: 16px;
-      font-family: inherit;
-      color: var(--ink);
-      outline: none;
-      text-align: center;
-      letter-spacing: 0.06em;
-      transition: border-color 0.15s;
-      -webkit-appearance: none;
+      position: absolute;
+      opacity: 0;
+      width: 1px;
+      height: 1px;
+      pointer-events: none;
     }
-    .gate-input:focus { border-color: var(--rose); }
+
     .gate-error {
-      margin-top: 10px;
       font-size: 12px;
       color: var(--rose);
-      display: none;
+      min-height: 18px;
+      text-align: center;
+      transition: opacity 0.2s;
     }
-    .gate-hint {
-      margin-top: 8px;
-      font-size: 11px;
-      color: var(--ink40);
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%       { transform: translateX(-8px); }
+      40%       { transform: translateX(8px); }
+      60%       { transform: translateX(-6px); }
+      80%       { transform: translateX(6px); }
     }
+    .pin-dots.shake { animation: shake 0.4s ease; }
 
     /* ── 메인 레이아웃 ── */
     #app { display: none; }
@@ -377,12 +397,17 @@
 <body>
 
   <!-- 비밀번호 게이트 -->
-  <div id="gate">
+  <div id="gate" onclick="document.getElementById('gate-input').focus()">
     <p class="gate-brand">KEEPINTOUCH · Admin</p>
-    <input class="gate-input" type="password" id="gate-input"
-           placeholder="비밀번호" autocomplete="off" enterkeyhint="done">
-    <p class="gate-error" id="gate-error">비밀번호가 올바르지 않습니다</p>
-    <p class="gate-hint">Enter 또는 확인을 눌러주세요</p>
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot" id="dot-0"></div>
+      <div class="pin-dot" id="dot-1"></div>
+      <div class="pin-dot" id="dot-2"></div>
+      <div class="pin-dot" id="dot-3"></div>
+    </div>
+    <p class="gate-error" id="gate-error"></p>
+    <input class="gate-input" type="tel" id="gate-input"
+           maxlength="4" inputmode="numeric" autocomplete="off">
   </div>
 
   <!-- 메인 앱 -->
@@ -511,22 +536,46 @@
     // ── 게이트 ────────────────────────────
     const gateInput = document.getElementById('gate-input');
     const gateError = document.getElementById('gate-error');
+    const pinDots   = document.getElementById('pin-dots');
 
-    gateInput.addEventListener('keydown', e => {
-      if (e.key === 'Enter') checkPassword();
-    });
+    // 페이지 로드 시 키보드 자동 열기
+    window.addEventListener('load', () => setTimeout(() => gateInput.focus(), 100));
 
-    function checkPassword() {
-      if (gateInput.value === ADMIN_PASSWORD) {
-        document.getElementById('gate').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
-        loadData();
-      } else {
-        gateError.style.display = 'block';
-        gateInput.value = '';
-        gateInput.focus();
+    function updateDots(val) {
+      for (let i = 0; i < 4; i++) {
+        const dot = document.getElementById('dot-' + i);
+        dot.classList.toggle('filled', i < val.length);
+        dot.classList.remove('error');
       }
     }
+
+    gateInput.addEventListener('input', () => {
+      const val = gateInput.value.replace(/\D/g, '').slice(0, 4);
+      gateInput.value = val;
+      gateError.textContent = '';
+      updateDots(val);
+
+      if (val.length === 4) {
+        if (val === ADMIN_PASSWORD) {
+          document.getElementById('gate').style.display = 'none';
+          document.getElementById('app').style.display = 'block';
+          loadData();
+        } else {
+          // 오류 피드백
+          for (let i = 0; i < 4; i++) {
+            document.getElementById('dot-' + i).classList.add('error');
+          }
+          pinDots.classList.add('shake');
+          gateError.textContent = '비밀번호가 올바르지 않습니다';
+          setTimeout(() => {
+            pinDots.classList.remove('shake');
+            gateInput.value = '';
+            updateDots('');
+            gateError.textContent = '';
+          }, 800);
+        }
+      }
+    });
 
     // ── 상태 ─────────────────────────────
     let allGuests  = [];
