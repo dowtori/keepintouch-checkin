@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
   <title>KEEPINTOUCH · Check-in</title>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <style>
     :root {
       --bg: #FAF7F2;
@@ -106,7 +106,7 @@
   <p class="brand">KEEPINTOUCH</p>
 
   <div class="qr-wrap">
-    <canvas id="qr-canvas"></canvas>
+    <div id="qr-canvas"></div>
   </div>
 
   <p class="instruction">핸드폰 카메라로 QR을 스캔해 주세요</p>
@@ -124,17 +124,14 @@
       + window.location.pathname.replace('index.html', '').replace(/\/$/, '')
       + '/confirm.html';
 
-    QRCode.toCanvas(
-      document.getElementById('qr-canvas'),
-      confirmUrl,
-      {
-        width: 240,
-        margin: 1,
-        color: { dark: '#2C1810', light: '#FFFFFF' },
-        errorCorrectionLevel: 'M',
-      },
-      (err) => { if (err) console.error(err); }
-    );
+    new QRCode(document.getElementById('qr-canvas'), {
+      text: confirmUrl,
+      width: 240,
+      height: 240,
+      colorDark: '#2C1810',
+      colorLight: '#FFFFFF',
+      correctLevel: QRCode.CorrectLevel.M,
+    });
 
     // WakeLock — 화면 꺼짐 방지
     let wakeLock = null;
