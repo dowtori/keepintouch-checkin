@@ -621,7 +621,7 @@
     function showSuccessAndRedirect(name) {
       document.getElementById('success-name').textContent = '환영합니다, ' + name + '님';
       showScene('scene-success');
-      setTimeout(() => { window.location.href = './guide.html'; }, 1500);
+      setTimeout(() => { window.location.href = './guide'; }, 1500);
     }
 
     // ── 동행인 씬 ─────────────────────────
@@ -662,7 +662,7 @@
 
     // 이미 체크인 → 안내 페이지
     document.getElementById('btn-already-guide').addEventListener('click', () => {
-      window.location.href = './guide.html';
+      window.location.href = './guide';
     });
 
     // 스태프 씬 → 처음으로

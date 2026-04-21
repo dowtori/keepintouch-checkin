@@ -120,9 +120,7 @@
 
   <script>
     // QR — 현재 경로 기반으로 confirm.html URL 자동 생성
-    const confirmUrl = window.location.origin
-      + window.location.pathname.replace('index.html', '').replace(/\/$/, '')
-      + '/confirm.html';
+    const confirmUrl = window.location.origin + '/confirm';
 
     new QRCode(document.getElementById('qr-canvas'), {
       text: confirmUrl,
