@@ -107,7 +107,7 @@ function checkin(rowId, day) {
   const now = new Date();
   guestSheet.getRange(rowId, CONFIG.COL_CHECKED_IN).setValue(true);
   guestSheet.getRange(rowId, CONFIG.COL_CHECKED_IN_AT).setValue(now);
-  checkinsSheet.appendRow([rowId, name, now, day, '']);
+  checkinsSheet.appendRow([rowId, name, now, day]);
 
   return {
     success:        true,
