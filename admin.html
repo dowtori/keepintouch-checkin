@@ -280,6 +280,83 @@
       color: var(--ink40);
     }
 
+    /* ── 게스트 상세 모달 ── */
+    .modal-backdrop {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(44,24,16,.4);
+      z-index: 100;
+      backdrop-filter: blur(2px);
+    }
+    .modal-backdrop.open { display: block; }
+    .modal-sheet {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--bg);
+      border-radius: 20px 20px 0 0;
+      padding: 28px 24px 48px;
+      z-index: 101;
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(.32,.72,0,1);
+    }
+    .modal-sheet.open { transform: translateY(0); }
+    .modal-handle {
+      width: 36px; height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 0 auto 24px;
+    }
+    .modal-profile {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .modal-avatar {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--border);
+      background: var(--rose-light);
+      flex-shrink: 0;
+    }
+    .modal-avatar-ph {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: var(--rose-light);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .modal-name {
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+    .modal-insta {
+      font-size: 13px;
+      color: var(--rose);
+      text-decoration: none;
+      letter-spacing: 0.01em;
+    }
+    .modal-insta:hover { text-decoration: underline; }
+    .modal-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 16px 0;
+    }
+    .modal-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      font-size: 14px;
+    }
+    .modal-row-label { color: var(--ink40); }
+    .modal-row-value { color: var(--ink); font-weight: 500; }
+    .modal-row-value.done { color: var(--success); }
+    .modal-row-value.pending { color: var(--ink40); font-weight: 400; }
+
     /* ── 로딩 ── */
     #loading {
       display: flex;
@@ -334,10 +411,102 @@
     <div class="list" id="list" style="display:none"></div>
   </div>
 
+  <!-- 게스트 상세 모달 -->
+  <div class="modal-backdrop" id="modal-backdrop"></div>
+  <div class="modal-sheet" id="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-profile">
+      <img class="modal-avatar" id="modal-avatar" src="" alt=""
+           onerror="this.style.display='none';document.getElementById('modal-avatar-ph').style.display='flex'">
+      <div class="modal-avatar-ph" id="modal-avatar-ph" style="display:none">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2C1810" stroke-width="1.5" opacity=".4">
+          <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+        </svg>
+      </div>
+      <div>
+        <p class="modal-name" id="modal-name"></p>
+        <a class="modal-insta" id="modal-insta" href="#" target="_blank"></a>
+      </div>
+    </div>
+    <hr class="modal-divider">
+    <div class="modal-row">
+      <span class="modal-row-label">입장 상태</span>
+      <span class="modal-row-value" id="modal-status"></span>
+    </div>
+    <div class="modal-row" id="modal-time-row">
+      <span class="modal-row-label">입장 시각</span>
+      <span class="modal-row-value" id="modal-time"></span>
+    </div>
+    <div class="modal-row" id="modal-companion-row">
+      <span class="modal-row-label">동행인</span>
+      <span class="modal-row-value" id="modal-companion"></span>
+    </div>
+  </div>
+
   <script src="./api.js"></script>
   <script>
     // ── 비밀번호 설정 ─────────────────────
     const ADMIN_PASSWORD = '0902';
+
+    // ── 모달 ─────────────────────────────
+    function extractHandle(url) {
+      if (!url) return '';
+      const m = url.match(/instagram\.com\/([^/?#]+)/);
+      return m ? '@' + m[1] : url;
+    }
+
+    function openModal(g) {
+      const avatar = document.getElementById('modal-avatar');
+      const avatarPh = document.getElementById('modal-avatar-ph');
+      avatar.style.display = 'block';
+      avatarPh.style.display = 'none';
+      avatar.src = `./profiles/${g.id}.jpg`;
+
+      document.getElementById('modal-name').textContent = g.name;
+
+      const instaEl = document.getElementById('modal-insta');
+      const handle = extractHandle(g.instagram);
+      if (handle) {
+        instaEl.textContent = handle;
+        instaEl.href = g.instagram.startsWith('http') ? g.instagram : 'https://instagram.com/' + handle.replace('@','');
+        instaEl.style.display = 'block';
+      } else {
+        instaEl.style.display = 'none';
+      }
+
+      const statusEl = document.getElementById('modal-status');
+      statusEl.textContent = g.is_checked_in ? '입장 완료' : '미도착';
+      statusEl.className = 'modal-row-value ' + (g.is_checked_in ? 'done' : 'pending');
+
+      const timeRow = document.getElementById('modal-time-row');
+      if (g.checked_in_at) {
+        document.getElementById('modal-time').textContent = formatTime(g.checked_in_at);
+        timeRow.style.display = 'flex';
+      } else {
+        timeRow.style.display = 'none';
+      }
+
+      const companionRow = document.getElementById('modal-companion-row');
+      if (g.companion_name) {
+        const cStatus = g.companion_is_checked_in ? ' · 입장 완료' : ' · 미도착';
+        document.getElementById('modal-companion').textContent = g.companion_name + cStatus;
+        document.getElementById('modal-companion').className =
+          'modal-row-value ' + (g.companion_is_checked_in ? 'done' : 'pending');
+        companionRow.style.display = 'flex';
+      } else {
+        companionRow.style.display = 'none';
+      }
+
+      document.getElementById('modal-backdrop').classList.add('open');
+      document.getElementById('modal-sheet').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('modal-backdrop').classList.remove('open');
+      document.getElementById('modal-sheet').classList.remove('open');
+    }
+
+    document.getElementById('modal-backdrop').addEventListener('click', closeModal);
 
     // ── 게이트 ────────────────────────────
     const gateInput = document.getElementById('gate-input');
@@ -490,7 +659,7 @@
         return;
       }
 
-      document.getElementById('list').innerHTML = sorted.map(g => {
+      document.getElementById('list').innerHTML = sorted.map((g, idx) => {
         const companionHtml = g.companion_name ? `
           <p class="guest-companion">
             <span class="companion-dot ${g.companion_is_checked_in ? 'checked' : 'pending'}"></span>
@@ -498,7 +667,7 @@
           </p>` : '';
 
         return `
-          <div class="guest-row ${g.is_checked_in ? 'is-checked' : ''}">
+          <div class="guest-row ${g.is_checked_in ? 'is-checked' : ''}" style="cursor:pointer" data-idx="${idx}">
             <div class="guest-info">
               <p class="guest-name">${g.name}</p>
               ${g.is_checked_in
@@ -511,6 +680,14 @@
             </span>
           </div>`;
       }).join('');
+
+      // 클릭 → 모달
+      document.querySelectorAll('.guest-row').forEach(row => {
+        row.addEventListener('click', () => {
+          const g = sorted[Number(row.dataset.idx)];
+          openModal(g);
+        });
+      });
     }
   </script>
 </body>

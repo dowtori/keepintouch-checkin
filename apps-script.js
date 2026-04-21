@@ -157,6 +157,7 @@ function listGuests() {
     guests.push({
       id:                       String(row[CONFIG.COL_ID - 1]),
       name:                     name,
+      instagram:                String(row[CONFIG.COL_INSTAGRAM - 1] || '').trim(),
       is_checked_in:            checkedIn,
       checked_in_at:            checkedAt,
       companion_name:           companionName,
