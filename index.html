@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>KEEPINTOUCH · Check-in</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <style>
+    :root {
+      --bg: #FAF7F2;
+      --ink: #2C1810;
+      --ink40: rgba(44,24,16,.4);
+      --rose: #D4826A;
+      --border: #E8DDD5;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Apple SD Gothic Neo', 'Pretendard', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 0;
+      padding: 40px 24px;
+    }
+
+    .brand {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink40);
+      margin-bottom: 36px;
+    }
+
+    .qr-wrap {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 24px rgba(44,24,16,.06);
+    }
+
+    #qr-canvas {
+      display: block;
+    }
+
+    .instruction {
+      margin-top: 28px;
+      font-size: 14px;
+      color: var(--ink40);
+      letter-spacing: 0.02em;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .event-info {
+      margin-top: 40px;
+      padding-top: 28px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      width: 100%;
+      max-width: 320px;
+    }
+
+    .event-name {
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+
+    .event-date {
+      font-size: 12px;
+      color: var(--ink40);
+      letter-spacing: 0.04em;
+    }
+
+    .wake-status {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      font-size: 10px;
+      color: var(--ink40);
+      letter-spacing: 0.04em;
+    }
+  </style>
+</head>
+<body>
+
+  <p class="brand">KEEPINTOUCH</p>
+
+  <div class="qr-wrap">
+    <canvas id="qr-canvas"></canvas>
+  </div>
+
+  <p class="instruction">핸드폰 카메라로 QR을 스캔해 주세요</p>
+
+  <div class="event-info">
+    <p class="event-name">무신사 메가스토어 성수 2F</p>
+    <p class="event-date">2026 · 4.24 – 4.25</p>
+  </div>
+
+  <p class="wake-status" id="wake-status"></p>
+
+  <script>
+    // QR — 현재 경로 기반으로 confirm.html URL 자동 생성
+    const confirmUrl = window.location.origin
+      + window.location.pathname.replace('index.html', '').replace(/\/$/, '')
+      + '/confirm.html';
+
+    QRCode.toCanvas(
+      document.getElementById('qr-canvas'),
+      confirmUrl,
+      {
+        width: 240,
+        margin: 1,
+        color: { dark: '#2C1810', light: '#FFFFFF' },
+        errorCorrectionLevel: 'M',
+      },
+      (err) => { if (err) console.error(err); }
+    );
+
+    // WakeLock — 화면 꺼짐 방지
+    let wakeLock = null;
+    const statusEl = document.getElementById('wake-status');
+
+    async function requestWakeLock() {
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        statusEl.textContent = '● 화면 유지 중';
+        wakeLock.addEventListener('release', () => {
+          statusEl.textContent = '';
+        });
+      } catch (e) {
+        statusEl.textContent = '';
+      }
+    }
+
+    document.addEventListener('visibilitychange', async () => {
+      if (document.visibilityState === 'visible') await requestWakeLock();
+    });
+
+    requestWakeLock();
+  </script>
+</body>
+</html>

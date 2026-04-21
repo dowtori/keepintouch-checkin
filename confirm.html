@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>KEEPINTOUCH · 입장 확인</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #FAF7F2;
+      --ink: #2C1810;
+      --ink60: rgba(44,24,16,.6);
+      --ink40: rgba(44,24,16,.4);
+      --ink20: rgba(44,24,16,.2);
+      --ink10: rgba(44,24,16,.1);
+      --rose: #D4826A;
+      --rose-light: #FBE9E3;
+      --blush: #F2C4B2;
+      --border: #E8DDD5;
+      --card: #FFFFFF;
+      --success: #6A9E7A;
+      --success-bg: #EEF5F1;
+      --radius: 14px;
+      --radius-sm: 8px;
+      --radius-pill: 28px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── 헤더 ── */
+    header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+    .h-brand {
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ink);
+    }
+    .h-sub {
+      font-size: 11px;
+      color: var(--ink40);
+      letter-spacing: 0.04em;
+    }
+
+    /* ── 메인 컨테이너 ── */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px 60px;
+    }
+
+    /* ── 공통 섹션 ── */
+    .scene {
+      width: 100%;
+      max-width: 360px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+    .scene.active { display: flex; }
+
+    /* ── 폼 씬 ── */
+    .scene-title {
+      font-size: 20px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      text-align: center;
+      margin-bottom: 6px;
+    }
+    .scene-sub {
+      font-size: 13px;
+      color: var(--ink40);
+      text-align: center;
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+
+    .field { width: 100%; margin-bottom: 14px; }
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      color: var(--ink40);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .field input {
+      width: 100%;
+      height: 52px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0 16px;
+      font-size: 16px;
+      color: var(--ink);
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+      -webkit-appearance: none;
+    }
+    .field input:focus { border-color: var(--rose); }
+    .field input::placeholder { color: var(--ink20); }
+
+    /* 에러 메시지 */
+    .field-hint {
+      font-size: 12px;
+      color: var(--rose);
+      margin-top: 6px;
+      display: none;
+    }
+    .field-hint.visible { display: block; }
+
+    /* ── 버튼 ── */
+    .btn {
+      width: 100%;
+      height: 52px;
+      border: none;
+      border-radius: var(--radius-pill);
+      font-size: 15px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      letter-spacing: 0.02em;
+      margin-top: 8px;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary {
+      background: var(--ink);
+      color: #fff;
+    }
+    .btn-primary:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .btn-secondary {
+      background: transparent;
+      color: var(--ink60);
+      border: 1px solid var(--border);
+      margin-top: 10px;
+    }
+    .btn-rose {
+      background: var(--rose);
+      color: #fff;
+    }
+
+    /* 로딩 스피너 */
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── 확인 씬 ── */
+    .confirm-card {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .confirm-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--border);
+      margin: 0 auto 16px;
+      display: block;
+      background: var(--rose-light);
+    }
+    .confirm-avatar-placeholder {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--rose-light);
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .confirm-avatar-placeholder svg { width: 32px; height: 32px; opacity: 0.4; }
+    .confirm-name {
+      font-size: 22px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    .confirm-handle {
+      font-size: 12px;
+      color: var(--ink40);
+      letter-spacing: 0.02em;
+      margin-bottom: 10px;
+    }
+    .confirm-status {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      padding: 3px 10px;
+      border-radius: var(--radius-pill);
+      margin-bottom: 16px;
+    }
+    .confirm-status.selected {
+      background: var(--rose-light);
+      color: var(--rose);
+    }
+    .confirm-status.reserve {
+      background: var(--ink10);
+      color: var(--ink60);
+    }
+    .confirm-question {
+      font-size: 15px;
+      color: var(--ink60);
+    }
+
+    /* ── 성공 씬 ── */
+    .success-icon {
+      width: 64px; height: 64px;
+      background: var(--success-bg);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .success-icon svg { width: 28px; height: 28px; }
+    .success-name {
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+    .success-msg {
+      font-size: 13px;
+      color: var(--ink40);
+      margin-bottom: 28px;
+    }
+    .redirect-bar {
+      width: 200px;
+      height: 2px;
+      background: var(--ink10);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .redirect-progress {
+      height: 100%;
+      background: var(--success);
+      border-radius: 2px;
+      animation: fill 1.5s linear forwards;
+    }
+    @keyframes fill { from { width: 0 } to { width: 100% } }
+
+    /* ── 이미 체크인 씬 ── */
+    .already-icon {
+      width: 56px; height: 56px;
+      background: var(--rose-light);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 18px;
+    }
+    .already-icon svg { width: 24px; height: 24px; }
+    .already-name { font-size: 18px; font-weight: 500; margin-bottom: 6px; }
+    .already-time { font-size: 13px; color: var(--ink40); }
+
+    /* ── 미매칭 씬 ── */
+    .error-icon {
+      width: 56px; height: 56px;
+      background: var(--ink10);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 18px;
+    }
+    .error-icon svg { width: 22px; height: 22px; }
+    .error-title { font-size: 17px; font-weight: 500; margin-bottom: 8px; text-align: center; }
+    .error-desc { font-size: 13px; color: var(--ink40); text-align: center; line-height: 1.6; margin-bottom: 28px; }
+
+    /* ── 스태프 씬 ── */
+    .staff-card {
+      width: 100%;
+      background: var(--rose-light);
+      border-radius: var(--radius);
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .staff-card p:first-child {
+      font-size: 15px;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+    .staff-card p:last-child {
+      font-size: 13px;
+      color: var(--ink60);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <span class="h-brand">Keepintouch</span>
+    <span class="h-sub">입장 확인</span>
+  </header>
+
+  <main>
+
+    <!-- 씬 1: 폼 입력 -->
+    <div class="scene active" id="scene-form">
+      <p class="scene-title">안녕하세요</p>
+      <p class="scene-sub">이름과 연락처 뒷자리를 입력해주세요</p>
+
+      <div class="field">
+        <label for="input-name">이름</label>
+        <input type="text" id="input-name" placeholder="홍길동" autocomplete="name" enterkeyhint="next">
+        <p class="field-hint" id="hint-name">이름을 입력해주세요</p>
+      </div>
+
+      <div class="field">
+        <label for="input-phone">연락처 뒷 4자리</label>
+        <input type="tel" id="input-phone" placeholder="1234" maxlength="4"
+               inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done">
+        <p class="field-hint" id="hint-phone">숫자 4자리를 입력해주세요</p>
+      </div>
+
+      <button class="btn btn-primary" id="btn-submit">확인</button>
+    </div>
+
+    <!-- 씬 2: 본인 확인 -->
+    <div class="scene" id="scene-confirm">
+      <div class="confirm-card">
+        <!-- 프로필 이미지 (id 기반, 없으면 placeholder) -->
+        <img class="confirm-avatar" id="confirm-avatar" src="" alt=""
+             onerror="this.style.display='none';document.getElementById('confirm-avatar-ph').style.display='flex'">
+        <div class="confirm-avatar-placeholder" id="confirm-avatar-ph" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#2C1810" stroke-width="1.5">
+            <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+          </svg>
+        </div>
+        <p class="confirm-name" id="confirm-name"></p>
+        <p class="confirm-handle" id="confirm-handle"></p>
+        <span class="confirm-status" id="confirm-status"></span>
+        <p class="confirm-question">맞으신가요?</p>
+      </div>
+      <button class="btn btn-rose" id="btn-yes">네, 맞습니다</button>
+      <button class="btn btn-secondary" id="btn-no">다시 입력</button>
+    </div>
+
+    <!-- 씬 3: 체크인 성공 -->
+    <div class="scene" id="scene-success" style="text-align:center">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#6A9E7A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <p class="success-name" id="success-name"></p>
+      <p class="success-msg">입장이 확인되었습니다</p>
+      <div class="redirect-bar"><div class="redirect-progress" id="redirect-bar"></div></div>
+    </div>
+
+    <!-- 씬 4: 이미 체크인 -->
+    <div class="scene" id="scene-already" style="text-align:center">
+      <div class="already-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#D4826A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/>
+          <polyline points="16 8 10 14 8 12"/>
+        </svg>
+      </div>
+      <p class="already-name" id="already-name"></p>
+      <p class="already-time" id="already-time"></p>
+      <button class="btn btn-secondary" id="btn-already-guide" style="margin-top:24px">안내 페이지로 이동</button>
+    </div>
+
+    <!-- 씬 5: 1회 미매칭 -->
+    <div class="scene" id="scene-retry" style="text-align:center">
+      <div class="error-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#2C1810" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <circle cx="12" cy="16" r="1" fill="#2C1810"/>
+          <circle cx="12" cy="12" r="9"/>
+        </svg>
+      </div>
+      <p class="error-title">일치하는 정보가 없어요</p>
+      <p class="error-desc">이름과 연락처 뒷 4자리를<br>다시 확인해주세요</p>
+      <button class="btn btn-primary" id="btn-retry">다시 시도</button>
+    </div>
+
+    <!-- 씬 5b: 네트워크 오류 -->
+    <div class="scene" id="scene-error" style="text-align:center">
+      <div class="error-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#2C1810" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <circle cx="12" cy="17" r="1" fill="#2C1810"/>
+        </svg>
+      </div>
+      <p class="error-title">연결에 문제가 생겼어요</p>
+      <p class="error-desc">잠시 후 다시 시도해주세요.<br>계속되면 담당자에게 말씀해주세요.</p>
+      <button class="btn btn-primary" id="btn-error-retry">다시 시도</button>
+    </div>
+
+    <!-- 씬 6: 2회 미매칭 → 스태프 -->
+    <div class="scene" id="scene-staff" style="text-align:center">
+      <div class="error-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#2C1810" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/>
+          <line x1="12" y1="8" x2="12" y2="13"/>
+          <circle cx="12" cy="16" r="1" fill="#2C1810"/>
+        </svg>
+      </div>
+      <div class="staff-card">
+        <p>담당자에게 말씀해주세요</p>
+        <p>입장 명단을 직접 확인해드릴게요</p>
+      </div>
+      <button class="btn btn-secondary" id="btn-staff-reset" style="margin-top:8px">처음으로</button>
+    </div>
+
+  </main>
+
+  <script src="./api.js"></script>
+  <script>
+    // ── 유틸 ──────────────────────────────
+    function extractHandle(url) {
+      if (!url) return '';
+      const m = url.match(/instagram\.com\/([^/?#]+)/);
+      return m ? '@' + m[1] : '';
+    }
+
+    function setConfirmAvatar(id) {
+      const img = document.getElementById('confirm-avatar');
+      const ph  = document.getElementById('confirm-avatar-ph');
+      img.style.display = 'block';
+      ph.style.display  = 'none';
+      img.src = `./profiles/${id}.jpg`;
+    }
+
+    // ── 상태 ──────────────────────────────
+    let attempts = 0;          // 미매칭 횟수
+    let pendingGuest = null;   // lookup 결과 임시 저장
+
+    // 오늘이 행사 몇일차인지 자동 감지
+    function getEventDay() {
+      const d = new Date();
+      const m = d.getMonth() + 1, day = d.getDate();
+      if (m === 4 && day === 24) return 1;
+      if (m === 4 && day === 25) return 2;
+      return 1; // 범위 밖이면 1일차로 처리
+    }
+
+    // ── 씬 전환 ──────────────────────────
+    function showScene(id) {
+      document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    // ── 시각 포맷 ─────────────────────────
+    function formatTime(raw) {
+      if (!raw) return '';
+      try {
+        const d = new Date(raw);
+        return d.toLocaleString('ko-KR', {
+          month: 'long', day: 'numeric',
+          hour: '2-digit', minute: '2-digit',
+        });
+      } catch { return raw; }
+    }
+
+    // ── 폼 제출 ──────────────────────────
+    const btnSubmit = document.getElementById('btn-submit');
+    const inputName  = document.getElementById('input-name');
+    const inputPhone = document.getElementById('input-phone');
+    const hintName   = document.getElementById('hint-name');
+    const hintPhone  = document.getElementById('hint-phone');
+
+    // Enter 키 처리
+    inputName.addEventListener('keydown', e => { if (e.key === 'Enter') inputPhone.focus(); });
+    inputPhone.addEventListener('keydown', e => { if (e.key === 'Enter') btnSubmit.click(); });
+
+    // 숫자만 입력
+    inputPhone.addEventListener('input', () => {
+      inputPhone.value = inputPhone.value.replace(/\D/g, '').slice(0, 4);
+    });
+
+    btnSubmit.addEventListener('click', async () => {
+      const name  = inputName.value.trim();
+      const phone = inputPhone.value.trim();
+
+      hintName.classList.remove('visible');
+      hintPhone.classList.remove('visible');
+
+      let valid = true;
+      if (!name) { hintName.classList.add('visible'); valid = false; }
+      if (phone.length !== 4) { hintPhone.classList.add('visible'); valid = false; }
+      if (!valid) return;
+
+      // 로딩
+      btnSubmit.disabled = true;
+      btnSubmit.innerHTML = '<div class="spinner"></div>';
+
+      try {
+        const result = await API.lookup(name, phone);
+
+        if (result.error) throw new Error('api_error');
+
+        if (result.found) {
+          if (result.is_checked_in) {
+            document.getElementById('already-name').textContent = result.name + '님';
+            document.getElementById('already-time').textContent =
+              formatTime(result.checked_in_at) + ' 입장 완료';
+            showScene('scene-already');
+          } else {
+            pendingGuest = result;
+            setConfirmAvatar(result.id);
+            document.getElementById('confirm-name').textContent = result.name + '님';
+            document.getElementById('confirm-handle').textContent = extractHandle(result.instagram);
+            const statusEl = document.getElementById('confirm-status');
+            statusEl.textContent = result.status === '예비' ? '예비' : '선정';
+            statusEl.className = 'confirm-status ' + (result.status === '예비' ? 'reserve' : 'selected');
+            showScene('scene-confirm');
+          }
+        } else {
+          // 미매칭 (found: false)
+          attempts++;
+          showScene(attempts >= 2 ? 'scene-staff' : 'scene-retry');
+        }
+      } catch {
+        // 네트워크 / API 오류 — attempts 카운트 없이 별도 씬
+        showScene('scene-error');
+      } finally {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = '확인';
+      }
+    });
+
+    // ── 본인 확인 → 체크인 ────────────────
+    document.getElementById('btn-yes').addEventListener('click', async () => {
+      if (!pendingGuest) return;
+
+      const btnYes = document.getElementById('btn-yes');
+      btnYes.disabled = true;
+      btnYes.innerHTML = '<div class="spinner"></div>';
+
+      try {
+        const result = await API.checkin(pendingGuest.row_id, getEventDay());
+
+        if (result.already_checked_in) {
+          document.getElementById('already-name').textContent = pendingGuest.name + '님';
+          document.getElementById('already-time').textContent =
+            formatTime(result.checked_in_at) + ' 입장 완료';
+          showScene('scene-already');
+        } else if (result.success) {
+          document.getElementById('success-name').textContent =
+            '환영합니다, ' + result.name + '님';
+          showScene('scene-success');
+          setTimeout(() => {
+            window.location.href = './guide.html';
+          }, 1500); // 애니메이션(1.5s)과 일치
+        }
+      } catch {
+        showScene('scene-error');
+      } finally {
+        btnYes.disabled = false;
+        btnYes.textContent = '네, 맞습니다';
+      }
+    });
+
+    // ── 다시 입력 ─────────────────────────
+    document.getElementById('btn-no').addEventListener('click', () => {
+      pendingGuest = null;
+      showScene('scene-form');
+    });
+
+    // 미매칭 재시도 — 두 필드 모두 초기화
+    document.getElementById('btn-retry').addEventListener('click', () => {
+      inputName.value = '';
+      inputPhone.value = '';
+      showScene('scene-form');
+      inputName.focus();
+    });
+
+    // 네트워크 오류 재시도 — 필드 유지
+    document.getElementById('btn-error-retry').addEventListener('click', () => {
+      showScene('scene-form');
+    });
+
+    // 이미 체크인 → 안내 페이지
+    document.getElementById('btn-already-guide').addEventListener('click', () => {
+      window.location.href = './guide.html';
+    });
+
+    // 스태프 씬 → 처음으로
+    document.getElementById('btn-staff-reset').addEventListener('click', () => {
+      attempts = 0;
+      inputName.value = '';
+      inputPhone.value = '';
+      showScene('scene-form');
+      inputName.focus();
+    });
+  </script>
+</body>
+</html>
